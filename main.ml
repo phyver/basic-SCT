@@ -48,4 +48,13 @@ let main () =
         exit 1)
 
 
-let _ = Printexc.print main ()
+let _ =
+  let args = [
+    ("-B", Arg.Int (fun b -> SCT.size_bound:=b), "set bound 'B'");
+    ("-D", Arg.Int (fun d -> SCT.depth_bound:=d), "set bound 'D'");
+  ] in
+  let help = "usage: sct [-B <n>] [-D <n>]\n" in
+  let help = help^"reads definition from standard input\n" in
+  let help = help^"available options:" in
+  Arg.parse args print_endline help;
+  Printexc.print main ()
