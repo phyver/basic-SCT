@@ -1,7 +1,5 @@
 {
 open Parser
-
-let get = Lexing.lexeme
 }
 let alpha = [ 'A'-'Z' 'a'-'z' ]
 let other = [ '0'-'9' '_']
@@ -16,12 +14,10 @@ rule token = parse
   | '['             { LBRAC }
   | ']'             { RBRAC }
   | ','             { COMMA }
-  | id              { ID(get lexbuf) }
+  | id              { ID(Lexing.lexeme lexbuf) }
   | eof             { EOF }
   | "(*"            { comments 0 lexbuf }
-
 and comments level = parse
   | "*)"            { if level = 0 then token lexbuf else comments (level-1) lexbuf }
   | _               { comments level lexbuf }
   | eof             { EOF }
-

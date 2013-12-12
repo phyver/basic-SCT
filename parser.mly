@@ -1,12 +1,8 @@
-/* file: haskell.mly */
-
 %{
 open Tools
-open Printf
-
 %}
 
-%token NEWLINE EQUAL LPAR RPAR LBRAC RBRAC EOF COMMA
+%token NEWLINE EQUAL LPAR RPAR LBRAC RBRAC COMMA EOF
 %token <string> ID
 
 %start defs
@@ -25,8 +21,8 @@ def:
   | ID parameters EQUAL term EOF        { failwith "the file must end with a newline!" }
 
 parameters:
-  |                                         { [] }
-  | parameter parameters                    { $1::$2 }
+  |                         { [] }
+  | parameter parameters    { $1::$2 }
 
 parameter:
   | ID                          { Var($1) }
@@ -38,7 +34,6 @@ parameter:
 parameter_tuple:
   | COMMA parameter                 { [$2] }
   | COMMA parameter parameter_tuple { $2::$3 }
-
 
 atomic_terms:
                                 { [] }
@@ -58,4 +53,3 @@ term:
 term_tuple:
     COMMA term              { [$2] }
   | COMMA term term_tuple   { $2::$3 }
-
