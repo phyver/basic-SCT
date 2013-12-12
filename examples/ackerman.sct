@@ -1,0 +1,4 @@
+ackermann Z[] Z[] = S[Z[]]
+ackermann Z[] S[n] = S[S[n]]
+ackermann S[m] Z[] = ackermann m S[Z[]]
+ackermann S[m] S[n] = ackermann m (ackermann S[m] n)

@@ -1,0 +1,3 @@
+comb Leaf[] = Leaf[]
+comb Node[t, Leaf[]] = Node[comb t, Leaf[]]
+comb Node[t1, Node[t2, t3]] = comb Node[Node[t1, t2], t3]

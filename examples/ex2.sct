@@ -1,0 +1,3 @@
+f A[x] = f B[C[x]]
+f B[x] = f x
+f C[x] = f x

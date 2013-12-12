@@ -1,0 +1,11 @@
+add Z[] n = n
+add S[m] n = S[add m n]
+
+size Leaf[] = Z[]
+size Node[t1, t2] = add (size t1) (size t2)
+
+comb_size Leaf[] s = Leaf[]
+comb_size Node[t, Leaf[]] S[s] = Node[comb t s, Leaf[]]
+comb_size Node[t1, Node[t2, t3]] s = comb Node[Node[t1, t2], t3] s
+
+comb t = comb_size t (size t)

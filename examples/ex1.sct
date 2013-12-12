@@ -1,0 +1,4 @@
+f x = g A[x]
+
+g A[A[x]] = f x
+g x = A[]

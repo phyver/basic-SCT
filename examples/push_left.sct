@@ -1,0 +1,3 @@
+push_left Leaf[] = Leaf[]
+push_left Node[t, Leaf[]] = Node[t, Leaf[]]
+push_left Node[t1, Node[t2, t3]] = push_left Node[Node[t1, t2], t3]
