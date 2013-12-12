@@ -3,7 +3,7 @@ module SCT = Size_change_termination
 let _ =
   SCT.setOption "show_lambda" true;
   SCT.size_bound:=1;
-  SCT.depth_bound:=1;
+  SCT.depth_bound:=0;
   SCT.setOption "show_all_steps" false;
   ()
 
