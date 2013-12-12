@@ -18,4 +18,10 @@ rule token = parse
   | ','             { COMMA }
   | id              { ID(get lexbuf) }
   | eof             { EOF }
+  | "(*"            { comments 0 lexbuf }
+
+and comments level = parse
+  | "*)"            { if level = 0 then token lexbuf else comments (level-1) lexbuf }
+  | _               { comments level lexbuf }
+  | eof             { EOF }
 
