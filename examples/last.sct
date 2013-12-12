@@ -1,2 +1,4 @@
+(* passes the SCT for B=1 and D=0 *)
+
 last Cons[x, Nil[]] = x
 last Cons[x, l] = last l

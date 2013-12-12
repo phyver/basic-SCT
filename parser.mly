@@ -18,7 +18,7 @@ defs:
 
 def:
   | ID parameters EQUAL term NEWLINE    { ($1, $2, $4) }
-  | ID parameters EQUAL term EOF        { failwith "the file must end with a newline!" }
+  | ID parameters EQUAL term EOF        { ($1, $2, $4) }
 
 parameters:
   |                         { [] }

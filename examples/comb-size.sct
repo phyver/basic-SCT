@@ -1,3 +1,5 @@
+(* passes the SCT for B=1 and D=0 *)
+
 add Z[] n = n
 add S[m] n = S[add m n]
 

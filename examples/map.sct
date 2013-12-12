@@ -1,2 +1,4 @@
+(* passes the SCT for B=1 and D=0 *)
+
 map f Nil[] = Nil[]
 map f Cons[x, xs] = Cons[f x, map f xs]

@@ -1,3 +1,4 @@
+(* passes the SCT for B=2 and D=0 or B=1 and D=1 *)
 f x = g A[x]
 
 g A[A[x]] = f x
