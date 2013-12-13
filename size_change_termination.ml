@@ -733,14 +733,14 @@ let new_call_set tau s =
 let count_edges g = Call_Graph.fold (fun _ s n -> n+(Calls_Set.cardinal s)) g 0
 
 (* Computing the transitive closure of a graph. *)
-let transitive_closure graph d b =
+let transitive_closure initial_graph d b =
 
   (* references to keep some info about the graph *)
   let new_arcs = ref false in
   let nb_steps = ref 0 in
 
-  (* single step for the TC *)
-  let one_step_TC g =
+  (* single step for the TC. "ig" is the initial graph, "g" is the current graph *)
+  let one_step_TC ig g =
     (*
      * local reference for the resulting graph: this is initialized to the
      * starting graph
@@ -779,7 +779,7 @@ let transitive_closure graph d b =
             ) a'
           ) a
         end
-      ) g
+      ) ig
     ) g;
     !result
   in
@@ -792,11 +792,11 @@ let transitive_closure graph d b =
     new_arcs := false;
     ifDebug "show_all_steps"
     begin fun _ ->
-      print_string ("** Call graph at step "^(string_of_int (!nb_steps))^" of the transitive closure: **\n");
+      print_string ("** Graph of paths at step "^(string_of_int (!nb_steps))^" **\n");
       print_graph g;
       print_newline()
     end;
-    let g = one_step_TC g in
+    let g = one_step_TC g g in
     if not !new_arcs
     then g
     else begin
@@ -808,36 +808,36 @@ let transitive_closure graph d b =
   (* collapse all substitutions *)
   ifDebug "show_initial_call_graph"
   begin fun _ ->
-    print_string "** Call graph before collapsing: **\n";
-    print_graph graph
+    print_string "** Initial control-flow graph: **\n";
+    print_graph initial_graph
   end;
-  let graph = Call_Graph.map (fun s ->
+  let collapsed_graph = Call_Graph.map (fun s ->
                 Calls_Set.fold (fun tau s ->
                   add_call_set (collapse_call d b tau) s)
                   s Calls_Set.empty)
-                graph in
-  let tc_graph = closure graph in
+                  initial_graph in
+  let graph_of_paths = closure collapsed_graph in
 
   ifDebug "show_collapsed_call_graph"
   begin fun _ ->
-    print_string ("** Call graph after collapsing, before TC: **\n");
-    print_graph graph
+    print_string ("** Control-flow graph after collapsing, before paths computations: **\n");
+    print_graph collapsed_graph
   end;
   ifDebug "show_final_call_graph"
   begin fun _ ->
-    print_string "** Call graph after TC: **\n";
-    print_graph tc_graph
+    print_string "** Graph of paths of control-flow graph: **\n";
+    print_graph graph_of_paths
   end;
   ifDebug "show_summary_TC"
   begin fun _ ->
-    print_string "* the initial graph contained "; print_int (count_edges graph); print_string " edge(s) *\n";
-    print_string "* the final graph contains "; print_int (count_edges tc_graph); print_string " edge(s) *\n";
-    print_string "* "; print_int !nb_steps; print_string " step(s) were necessary to compute the transitive closure. *\n";
+    print_string "* the initial control-flow graph contained "; print_int (count_edges initial_graph); print_string " edge(s) *\n";
+    print_string "* its graph of paths contains "; print_int (count_edges graph_of_paths); print_string " edge(s) *\n";
+    print_string "* "; print_int !nb_steps; print_string " step(s) were necessary to compute the graph of paths. *\n";
     print_newline()
   end;
 
   (* Returns the value of the TC. *)
-  tc_graph
+  graph_of_paths
 
 
 (* computes the list of function names (nodes) that are accessible from f in the
