@@ -1,0 +1,51 @@
+
+Compiling the program
+=====================
+
+  $ touch .depend
+  $ make depend
+  $ make all
+or
+  $ make opt
+
+
+Running the program
+===================
+
+The program reads recursive definitions from standard input and checks if they
+pass the size-change termination criterion.
+
+To end the input, press Control-d.
+
+To read definitions from a file, use
+  $ sct < file
+
+It is possible to change the value of bound B with
+  $ sct -B 3
+and to change the value of bound D with
+  $ sct -D 4
+
+For example, we get the original SCT with depth of values with
+  $ sct -B 1 -D 0
+
+
+Syntax of recursive definitions
+===============================
+
+Recursive definitions are written with a very simple syntax similar to Haskell
+definitions. Here is, for example, the Ackermann function:
+
+ackermann Z[] Z[] = S[Z[]]
+ackermann Z[] S[n] = S[S[n]]
+ackermann S[m] Z[] = ackermann m S[Z[]]
+ackermann S[m] S[n] = ackermann m (ackermann S[m] n)
+
+The points to note are
+  - each line corresponds a clause of the definition
+  - constructors always have square brackets
+  - the global environment of the definitions is empty
+  - no type checking is done, only termination checking
+
+Several examples are given in the "examples" directory.
+
+
