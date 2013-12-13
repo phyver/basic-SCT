@@ -48,19 +48,19 @@ let print_clause c = let f, c, t = c in
                      print_term true t;
                      print_newline()
 
-(* transforms the parameters into an environment for the SCT: the parameter
- * Cons[x,xs] will give x:= pi_1 Cons- x0 and xs = pi_2 Cons- x0 *)
-let get_parameters all : (string * SCT.term) list=
+(* transforms the patterns of the clause into an environment for the SCT: the
+ * pattern Cons[x,xs] will give x:= pi_1 Cons- x0 and xs = pi_2 Cons- x0 *)
+let patterns2environment all : (string * SCT.term) list=
   (* c: current context
    * b: branch already computed
    * i: number of the function parameter *)
-  let rec get_parameters_aux i b c= match c with
+  let rec patterns2environment_aux i b c= match c with
     | Var(x) -> [(x, SCT.Epsilon(b, i))]
-    | Tuple(l) -> List.concat (mapi (fun k t -> get_parameters_aux i (SCT.Project (string_of_int k)::b) t) l)
-    | Constr(ct, t) -> get_parameters_aux i ((SCT.RemoveVariant ("#"^ct))::b) t
+    | Tuple(l) -> List.concat (mapi (fun k t -> patterns2environment_aux i (SCT.Project (string_of_int k)::b) t) l)
+    | Constr(ct, t) -> patterns2environment_aux i ((SCT.RemoveVariant ("#"^ct))::b) t
     | App(_,_) -> assert false
   in
-  List.concat (mapi (fun i c -> get_parameters_aux i [] c) all)
+  List.concat (mapi (fun i c -> patterns2environment_aux i [] c) all)
 
 
 let infty arity =
@@ -69,6 +69,7 @@ let infty arity =
     then acc
     else infty_aux (arity-1) ((SCT.Infty,[],arity-1)::acc)
   in SCT.Sum(infty_aux arity [])
+
 
 let process_args args environment arity: SCT.call =
   let rec process_args_aux (a:term) = match a with
@@ -85,7 +86,7 @@ let process_args args environment arity: SCT.call =
 
 
 let process_clause c list_functions = match c with f, c, t ->
-  let environment = get_parameters c in
+  let environment = patterns2environment c in
   let rec process_clause_aux (args:term list) (t:term) : (string*SCT.call) list =
     match t with
     | Var(x) ->
