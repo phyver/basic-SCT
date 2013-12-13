@@ -1,4 +1,10 @@
 
+Dependencies
+============
+
+ocaml, with ocamllex and ocamlyacc
+
+
 Compiling the program
 =====================
 
@@ -18,22 +24,38 @@ pass the size-change termination criterion.
 To end the input, press Control-d.
 
 To read definitions from a file, use
-  $ sct < file
+  $ ./sct < file
 
 It is possible to change the value of bound B with
-  $ sct -B 3
+  $ ./sct -B 3
 and to change the value of bound D with
-  $ sct -D 4
+  $ ./sct -D 4
 
 For example, we get the original SCT with depth of values with
-  $ sct -B 1 -D 0
+  $ ./sct -B 1 -D 0
+
+It is possible to ask the program to print various information. Use
+  $ ./sct -help
+to get the list.
 
 
 Syntax of recursive definitions
 ===============================
 
 Recursive definitions are written with a very simple syntax similar to Haskell
-definitions. Here is, for example, the Ackermann function:
+definitions.
+The aim was to make parsing and static analysis as simple as possible.
+
+Each line (clause) of a recursive definition is of the form
+
+  function_name  pattern*  =  body
+
+where a "pattern" is a Caml (deep) pattern matching and "body" uses only
+applications, constructors, tuples, variables from the patterns and other
+function names.
+
+
+Here is, for example, the Ackermann function:
 
 ackermann Z[] Z[] = S[Z[]]
 ackermann Z[] S[n] = S[S[n]]
