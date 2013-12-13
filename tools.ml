@@ -21,29 +21,31 @@ type term = Var of string | Constr of string*term | Tuple of term list | App of 
 type clause = string * term list * term
 
 (* printing functions *)
-let rec print_term t = match t with
+let rec print_term paren t = match t with
   | Var(x) -> print_string x
   | Constr(ct, Tuple([])) -> print_string (ct^"[]")
   | Constr(ct, Tuple(l)) -> print_string (ct^"[");
-                            SCT.print_list ", " print_term l;
+                            SCT.print_list ", " (print_term false) l;
                             print_string "]"
   | Constr(ct, t) -> print_string (ct^"[");
-                     print_term t;
+                     print_term false t;
                      print_string "]"
-  | Tuple(l) -> print_string "(";
-                SCT.print_list ", " print_term l;
-                print_string ")"
-  | App(t1, t2) -> print_term t1;
+  | Tuple(l) -> if paren then print_string "(";
+                SCT.print_list ", " (print_term false) l;
+                if paren then print_string ")"
+  | App(t1, t2) -> if paren then print_string "(";
+                   print_term false t1;
                    print_string " ";
-                   print_string "("; print_term t2; print_string ")"
+                   print_term true t2;
+                   if paren then print_string ")"
 
-let rec print_calling_context c = SCT.print_list " " print_term c
+let rec print_calling_context c = SCT.print_list " " (print_term true) c
 
 let print_clause c = let f, c, t = c in
-                     print_string (f^" : ");
+                     print_string (f^" ");
                      print_calling_context c;
-                     print_string " -> ";
-                     print_term t;
+                     print_string " = ";
+                     print_term true t;
                      print_newline()
 
 (* transforms the parameters into an environment for the SCT: the parameter
@@ -61,15 +63,23 @@ let get_parameters all : (string * SCT.term) list=
   List.concat (mapi (fun i c -> get_parameters_aux i [] c) all)
 
 
-let process_args args environment : SCT.call =
+let infty arity =
+  let rec infty_aux arity acc =
+    if arity = 0
+    then acc
+    else infty_aux (arity-1) ((SCT.Infty,[],arity-1)::acc)
+  in SCT.Sum(infty_aux arity [])
+
+let process_args args environment arity: SCT.call =
   let rec process_args_aux (a:term) = match a with
     | Var(x) ->
         if List.mem_assoc x environment
         then List.assoc x environment
-        else SCT.Sum([(SCT.Infty,[],77)])
+        else infty arity
+    | Tuple([]) -> infty arity
     | Tuple(l) ->  SCT.Record(mapi (fun i a -> (string_of_int i, process_args_aux a)) l)
     | Constr(c, a) -> SCT.Variant("#"^c, process_args_aux a)
-    | App(_,_) -> SCT.Sum([(SCT.Infty,[],66)])
+    | App(_,_) -> infty arity
   in
   mapi (fun i a -> (i, process_args_aux a)) args
 
@@ -82,7 +92,7 @@ let process_clause c list_functions = match c with f, c, t ->
         if List.mem_assoc x environment
         then []
         else if List.mem x list_functions
-        then [ (x, process_args args environment) ]
+        then [ (x, process_args args environment (List.length c)) ]
         else failwith ("'"^x^"' is nowhere to be found...")
     | Tuple(l) ->  List.concat (List.map (process_clause_aux []) l)
     | Constr(_, t) -> process_clause_aux [] t
