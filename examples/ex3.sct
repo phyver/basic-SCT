@@ -1,0 +1,7 @@
+(* passes the SCT for B=1 and D=2 *)
+
+push_left Leaf[] = Leaf[]
+push_left Node[t, Leaf[]] = Node[t, Leaf[]]
+push_left Node[t1, Node[t2, t3]] = aux Node[Node[t1, t2], t3]
+
+aux t = push_left t
