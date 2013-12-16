@@ -63,6 +63,7 @@ let patterns2environment all : (string * SCT.term) list=
   List.concat (mapi (fun i c -> patterns2environment_aux i [] c) all)
 
 
+(* returns the maximal term for a given arity: <infty>x_0 + ... + <infty>{x_arity-1} *)
 let infty arity =
   let rec infty_aux arity acc =
     if arity = 0
@@ -70,7 +71,11 @@ let infty arity =
     else infty_aux (arity-1) ((SCT.Infty,[],arity-1)::acc)
   in SCT.Sum(infty_aux arity [])
 
-
+(* process a list of arguments (to a recursive call) to get the corresponding
+ * substitution.
+ *   args is the list of arguments
+ *   environment is the environment corresponding to the patterns of the clause
+ *   arity is the arity of the calling function *)
 let process_args args environment arity: SCT.call =
   let rec process_args_aux (a:term) = match a with
     | Var(x) ->
@@ -85,6 +90,8 @@ let process_args args environment arity: SCT.call =
   mapi (fun i a -> (i, process_args_aux a)) args
 
 
+(* process a clause for the inductive definition
+ *   list_functions is the list of inductively defined functions in the definitions*)
 let process_clause c list_functions = match c with f, c, t ->
   let environment = patterns2environment c in
   let rec process_clause_aux (args:term list) (t:term) : (string*SCT.call) list =
@@ -100,3 +107,5 @@ let process_clause c list_functions = match c with f, c, t ->
     | App(t1, t2) -> (process_clause_aux (t2::args) t1) @ (process_clause_aux [] t2)
   in
   process_clause_aux [] t
+
+
