@@ -42,6 +42,9 @@ lexer.ml:
 	$(OCAMLLEX) $(OCAMLLEXFLAGS) lexer.mll
 
 clean:
+	rm -f *.cm[aoix] *.o
+
+very_clean:
 	rm -f *.mli
 	rm -f *.cm[aoix] *.o
 	rm -f lexer.ml parser.ml parser.mli
