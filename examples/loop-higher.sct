@@ -1,0 +1,12 @@
+(* this example loops. It doesn't pass the test.
+
+The reason is that the static analysis sees a call to "g" (without arguments)
+from "g". It thus gives an arc labeled with the empty substitution.
+
+This is very crude, but safe.
+*)
+
+
+app f = f ()
+
+g x = app g
