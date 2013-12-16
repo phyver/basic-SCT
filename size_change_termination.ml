@@ -231,6 +231,7 @@ let rec print_term = function
     print_string " )"
 
 let print_substitution tau =
+  if tau = [] then print_string "    empty substitution\n";
   List.iter (function i,arg ->
     if i>0 || debugOption "show_lambda"
     then begin
@@ -553,16 +554,26 @@ let rec get_subtree ds v = match ds,v with
       let v = List.assoc "#default" l in
       get_subtree ds v
     with
-      Not_found -> assert false (* typing problem *)
+      Not_found ->
+        (
+          print_string "*** TYPING PROBLEM...\n";
+          print_string "*** the branch ";
+          print_list " " print_destr ds ;
+          print_string "\n*** meets the value ";
+          print_term v;
+          print_newline();
+          assert false (* typing problem *)
+        )
     end
 
   | ds,v ->
       (
-        print_string "*** TYPING PROBLEM... ***\n";
+        print_string "*** TYPING PROBLEM...\n";
         print_string "*** the branch ";
         print_list " " print_destr ds ;
-        print_string "*** meets the value ";
+        print_string "\n*** meets the value ";
         print_term v;
+        print_newline();
         assert false (* typing problem *)
       )
 
@@ -766,7 +777,7 @@ let transitive_closure initial_graph d b =
                   print_substitution tau;
                   print_string "    with\n";
                   print_substitution tau';
-                  print_string "    to give\n";
+                  print_string "    with B="; print_int b; print_string " and D="; print_int d; print_string " to give\n";
                   print_substitution sigma;
                   print_newline()
                 end;
@@ -779,8 +790,8 @@ let transitive_closure initial_graph d b =
             ) a'
           ) a
         end
-      ) ig
-    ) g;
+      ) g
+    ) ig;
     !result
   in
 
@@ -788,7 +799,7 @@ let transitive_closure initial_graph d b =
    * Computing the actual closure. We know we've reached the TC when no new
    * edge was added.
    *)
-  let rec closure g =
+  let rec closure ig g =
     new_arcs := false;
     ifDebug "show_all_steps"
     begin fun _ ->
@@ -796,12 +807,12 @@ let transitive_closure initial_graph d b =
       print_graph g;
       print_newline()
     end;
-    let g = one_step_TC g g in
+    let g = one_step_TC ig g in
     if not !new_arcs
     then g
     else begin
       nb_steps := !nb_steps+1;
-      closure g
+      closure ig g
     end
   in
 
@@ -816,7 +827,7 @@ let transitive_closure initial_graph d b =
                   add_call_set (collapse_call d b tau) s)
                   s Calls_Set.empty)
                   initial_graph in
-  let graph_of_paths = closure collapsed_graph in
+  let graph_of_paths = closure initial_graph collapsed_graph in
 
   ifDebug "show_collapsed_call_graph"
   begin fun _ ->

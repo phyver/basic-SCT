@@ -21,31 +21,31 @@ type term = Var of string | Constr of string*term | Tuple of term list | App of 
 type clause = string * term list * term
 
 (* printing functions *)
-let rec print_term paren t = match t with
+let rec print_term paren_app paren_tup t = match t with
   | Var(x) -> print_string x
   | Constr(ct, Tuple([])) -> print_string (ct^"[]")
   | Constr(ct, Tuple(l)) -> print_string (ct^"[");
-                            SCT.print_list ", " (print_term false) l;
+                            SCT.print_list ", " (print_term false false) l;
                             print_string "]"
   | Constr(ct, t) -> print_string (ct^"[");
-                     print_term false t;
+                     print_term false false t;
                      print_string "]"
-  | Tuple(l) -> if paren then print_string "(";
-                SCT.print_list ", " (print_term false) l;
-                if paren then print_string ")"
-  | App(t1, t2) -> if paren then print_string "(";
-                   print_term false t1;
+  | Tuple(l) -> if paren_tup then print_string "(";
+                SCT.print_list ", " (print_term false false) l;
+                if paren_tup then print_string ")"
+  | App(t1, t2) -> if paren_app then print_string "(";
+                   print_term false false t1;
                    print_string " ";
-                   print_term true t2;
-                   if paren then print_string ")"
+                   print_term true true t2;
+                   if paren_app then print_string ")"
 
-let rec print_calling_context c = SCT.print_list " " (print_term true) c
+let rec print_calling_context c = SCT.print_list " " (print_term false true) c
 
 let print_clause c = let f, c, t = c in
                      print_string (f^" ");
                      print_calling_context c;
                      print_string " = ";
-                     print_term true t;
+                     print_term false true t;
                      print_newline()
 
 (* transforms the patterns of the clause into an environment for the SCT: the
