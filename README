@@ -2,16 +2,25 @@
 Dependencies
 ============
 
-ocaml, with ocamllex and ocamlyacc
+ocaml (possibly with ocamllex and ocamlyacc)
 
 
 Compiling the program
 =====================
 
+To compile:
+  $ make clean
+and then
+  $ make opt
+or
+  $ make byte
+
+
+To regenerate all the ml files with ocamllex / ocamlyacc:
+  $ make very_clean
   $ touch .depend
   $ make depend
-  $ make all
-or
+and then
   $ make opt
 or
   $ make byte
