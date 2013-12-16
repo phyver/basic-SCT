@@ -43,6 +43,7 @@ lexer.ml:
 
 clean:
 	rm -f *.cm[aoix] *.o
+	rm -f sct
 
 very_clean:
 	rm -f *.mli
