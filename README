@@ -45,8 +45,8 @@ For example, we get the original SCT with depth of values with
   $ ./sct -B 1 -D 0
 
 It is possible to ask the program to print various information. Use
-  $ ./sct -help
-to get the list.
+  $ ./sct -v <n>
+where n is 1, 2, 3, 4, 5 or 6.
 
 
 Syntax of recursive definitions
