@@ -1,0 +1,9 @@
+(* original example from the SCT paper *)
+
+(* program with indirect recursion B=1 D=0 *)
+
+f Nil[] x = x
+f Cons[i,is] x = g is x Cons[i,is]
+
+g a b c = f a Cons[b,c]
+

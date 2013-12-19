@@ -11,3 +11,4 @@ comb_size Node[t, Leaf[]] S[s] = Node[comb_size t s, Leaf[]]
 comb_size Node[t1, Node[t2, t3]] s = comb_size Node[Node[t1, t2], t3] s
 
 comb t = comb_size t (size t)
+

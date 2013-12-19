@@ -1,0 +1,8 @@
+(* original example from the SCT paper *)
+
+(* function with permuted parameters B=1 D=0 *)
+
+p m n S[r] = p m r n
+p m S[n] r = p r n m
+p m Z[] Z[] = m
+

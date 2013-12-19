@@ -1,0 +1,10 @@
+(* original example from the SCT paper *)
+
+(* program with late-starting sequence of descending parameter values B=1 D=0 *)
+
+f a Nil[] = g a Nil[]
+f a Cons[b,bs] = f Cons[b,a] bs
+
+g Nil[] d = d
+g Cons[c,cs] d = g cs Cons[c, d]
+

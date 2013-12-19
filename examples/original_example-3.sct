@@ -1,0 +1,8 @@
+(* original example from the SCT paper *)
+
+(* function with lexially ordered parameters B=1 D=0 *)
+
+ack Z[] n = S[n]
+ack S[m] Z[] = ack m S[S[]]
+ack S[m] S[n] = ack m (ack S[m] n)
+

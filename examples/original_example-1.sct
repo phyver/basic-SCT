@@ -1,0 +1,9 @@
+(* original example from the SCT paper *)
+
+(* reverse function, with accumulating parameter B=1 D=0 *)
+
+rev ls = r1 ls Nil[]
+
+r1 Nil[] a = a
+r1 Cons[x,xs] a = r1 xs Cons[x,a]
+

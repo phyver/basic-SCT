@@ -1,0 +1,8 @@
+(* original example from the SCT paper *)
+
+(* program with permuted and possibly discarded parameters B=1 D=0 *)
+
+f x Nil[] = x
+f Z[] Cons[y,ys] = f Cons[y,ys] ys
+f Cons[x,xs] y = f y xs
+
