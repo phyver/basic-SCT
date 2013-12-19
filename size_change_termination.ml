@@ -672,7 +672,7 @@ let collapse_call d b tau = List.map (function i,u -> i,collapse d b u) tau
  * composition in the code.
  *)
 let compose d b tau1 tau2 =
-  collapse_call d b (List.map (function i,u -> i,(substitute u tau2)) tau1)
+  collapse_call d b (List.map (function i,u -> i,(substitute u tau1)) tau2)
 
 
 (*************************
@@ -689,6 +689,7 @@ let is_decreasing tau =
       ifDebug "show_decreasing_terms" begin fun _ ->
         print_string ("** Found decreasing node: **\n");
         print_term (Epsilon(ds,i));
+        print_newline();
         print_newline()
       end;
       true
@@ -803,7 +804,7 @@ let transitive_closure initial_graph d b =
     new_arcs := false;
     ifDebug "show_all_steps"
     begin fun _ ->
-      print_string ("** Graph of paths at step "^(string_of_int (!nb_steps))^" **\n");
+      print_string ("** Graph of paths at iteration "^(string_of_int (!nb_steps))^" **\n");
       print_graph g;
       print_newline()
     end;
@@ -819,7 +820,7 @@ let transitive_closure initial_graph d b =
   (* collapse all substitutions *)
   ifDebug "show_initial_call_graph"
   begin fun _ ->
-    print_string "** Initial control-flow graph: **\n";
+    print_string "** Control-flow graph given by the static analysis: **\n";
     print_graph initial_graph
   end;
   let collapsed_graph = Call_Graph.map (fun s ->
@@ -827,7 +828,7 @@ let transitive_closure initial_graph d b =
                   add_call_set (collapse_call d b tau) s)
                   s Calls_Set.empty)
                   initial_graph in
-  let graph_of_paths = closure initial_graph collapsed_graph in
+  let graph_of_paths = closure initial_graph initial_graph in
 
   ifDebug "show_collapsed_call_graph"
   begin fun _ ->
@@ -836,14 +837,14 @@ let transitive_closure initial_graph d b =
   end;
   ifDebug "show_final_call_graph"
   begin fun _ ->
-    print_string "** Graph of paths of control-flow graph: **\n";
+    print_string "** Graph of paths of the initial control-flow graph: **\n";
     print_graph graph_of_paths
   end;
   ifDebug "show_summary_TC"
   begin fun _ ->
     print_string "* the initial control-flow graph contained "; print_int (count_edges initial_graph); print_string " edge(s) *\n";
     print_string "* its graph of paths contains "; print_int (count_edges graph_of_paths); print_string " edge(s) *\n";
-    print_string "* "; print_int !nb_steps; print_string " step(s) were necessary to compute the graph of paths. *\n";
+    print_string "* "; print_int !nb_steps; print_string " iteration(s) were necessary to compute the graph of paths. *\n";
     print_newline()
   end;
 
@@ -876,6 +877,8 @@ let accessible_from graph f =
  **********************************************************************)
 
 let size_change_termination_bounds graph d b =
+  assert (d>=0 && b>0) ;
+
   let tc_graph = transitive_closure graph d b in
     Call_Graph.for_all
       (fun fg s ->
@@ -889,8 +892,7 @@ let size_change_termination_bounds graph d b =
                 ifDebug "show_coherents"
                 begin fun _ ->
                   print_string ("** Found coherent loop from \"" ^ f ^ "\" to itself: **\n");
-                  print_substitution sigma;
-                  print_newline()
+                  print_substitution sigma
                 end;
                 is_decreasing sigma ||
                 (ifDebug "show_nondecreasing_coherents" begin fun _ ->
