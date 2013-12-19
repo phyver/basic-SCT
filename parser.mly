@@ -44,17 +44,20 @@ atomic_terms:
   | atomic_term atomic_terms    { $1::$2 }
 
 atomic_term:
-    ID                      { Var($1) }
+  | ID                      { Var($1) }
   | ID LBRAC RBRAC          { Constr($1,Tuple([])) }
   | ID LBRAC term RBRAC     { Constr($1,$3) }
   | LPAR RPAR               { Tuple([]) }
   | LPAR term RPAR          { $2 }
 
+app:
+  | atomic_term             { $1 }
+  | app atomic_term        { App($1,$2) }
+
 term:
-    atomic_term             { $1 }
-  | term atomic_term        { App($1,$2) }
-  | atomic_term term_tuple  { Tuple($1::$2) }
+  | app             { $1 }
+  | app term_tuple  { Tuple($1::$2) }
 
 term_tuple:
-    COMMA atomic_term               { [$2] }
-  | COMMA atomic_term term_tuple    { $2::$3 }
+    COMMA app               { [$2] }
+  | COMMA app term_tuple    { $2::$3 }
