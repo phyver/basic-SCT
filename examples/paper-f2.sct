@@ -1,0 +1,5 @@
+(* passes the SCT for B=1 and D=2 *)
+
+f2 A[x] = f2 B[C[x]]
+f2 B[x] = f2 x
+f2 C[x] = f2 x

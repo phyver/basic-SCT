@@ -1,0 +1,6 @@
+(* passes the SCT for B=1 and D=0 *)
+
+ack Z[] Z[] = S[Z[]]
+ack Z[] S[n] = S[S[n]]
+ack S[m] Z[] = ack m S[Z[]]
+ack S[m] S[n] = ack m (ack S[m] n)

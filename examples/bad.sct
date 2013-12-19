@@ -9,5 +9,4 @@ bad (x,y) = bad A[x]
 (* Beware, the example
 bad A[x,y,z] = bad (x,y)
 is size change terminating for D=0, i.e., when we forget about the
-constructors. Because the test is incremental, starting at D=0, this example
-passes the termination test without raising the exception *)
+constructors. *)

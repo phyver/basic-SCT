@@ -1,0 +1,9 @@
+(* strange way of computing the sum of a list of integers *)
+
+(* it passes the termination test if D=4 *)
+
+sum Nil[] = Z[]
+sum Cons[n, Nil[]] = n
+sum Cons[n, Cons[Z[], l]] = sum Cons[n, l]
+sum Cons[n, Cons[S[m], l]] = sum Cons[S[n], Cons[m, l]]
+
