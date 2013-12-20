@@ -42,7 +42,10 @@ and to change the value of bound D with
   $ ./sct -D 4
 
 For example, we get the original SCT with depth of values with
-  $ ./sct -B 1 -D 0
+  $ ./sct -B 1 -D 0 -collapse_analysis
+or simply with
+  $ ./sct -original_SCT
+
 
 It is possible to ask the program to print various information. Use
   $ ./sct -v <n>

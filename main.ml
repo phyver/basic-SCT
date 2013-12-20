@@ -5,9 +5,9 @@ let _ =
   SCT.size_bound:=1;
   SCT.depth_bound:=2;
   SCT.setOption "show_all_compositions" false;
+  SCT.setOption "initial_collapse_of_graph" false;
 
   SCT.setOption "show_initial_call_graph" false ;
-  SCT.setOption "show_collapsed_call_graph" false ;
   SCT.setOption "show_final_call_graph" false ;
   SCT.setOption "show_all_steps" false ;
   SCT.setOption "show_coherents" false ;
@@ -83,7 +83,8 @@ let _ =
     ("-D", Arg.Int (fun d -> SCT.depth_bound:=d), "<n> set bound 'D' (n>=0)");
     ("-v", Arg.Int (fun v -> set_verbosity v), "<n> shows various information (0<n<7)");
     ("-no_subsumption", Arg.Unit (fun _ -> SCT.setOption "use_approximates" false), "doesn't use subsumption to simplify the graph of paths");
-    ("-show_definitions", Arg.Unit (fun _ -> show_clauses := true), "show the definition (after parsing)");
+    ("-collapse_analysis", Arg.Unit (fun _ -> SCT.setOption "initial_collapse_of_graph" true), "collapse the static analysis before building graph of path");
+    ("-original_SCT", Arg.Unit (fun _ -> SCT.size_bound:=1; SCT.depth_bound:=0; SCT.setOption "initial_collapse_of_graph" true), "makes the criterion behave like the original SCT");
   ] in
   let help = "usage: sct [-B <n>] [-D <n>] [-v <n>] [...]\n" in
   let help = help^"reads definition from standard input\n" in

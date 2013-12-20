@@ -110,11 +110,11 @@ does terminate
 let debugOptions = ref [
   "additional_sanity_checking" , true                   ;
   "use_approximates" , true                             ;
+  "initial_collapse_of_graph", true                     ;
 
 (* verbosity of output messages *)
   "show_lambda" , false                                 ;
   "show_initial_call_graph" , false                     ;
-  "show_collapsed_call_graph" , false                   ;
   "show_final_call_graph" , false                       ;
   "show_summary_TC" , false                             ;
   "show_all_steps" , false                              ;
@@ -823,18 +823,21 @@ let transitive_closure initial_graph d b =
     print_string "** Control-flow graph given by the static analysis: **\n";
     print_graph initial_graph
   end;
-  let collapsed_graph = Call_Graph.map (fun s ->
+  ifDebug "initial_collapse_of_graph"
+  begin fun _ ->
+  let initial_graph = Call_Graph.map (fun s ->
                 Calls_Set.fold (fun tau s ->
                   add_call_set (collapse_call d b tau) s)
                   s Calls_Set.empty)
                   initial_graph in
+  ifDebug "show_initial_call_graph"
+  begin fun _ ->
+    print_string "** Control-flow graph after collapse: **\n";
+    print_graph initial_graph
+  end
+  end;
   let graph_of_paths = closure initial_graph initial_graph in
 
-  ifDebug "show_collapsed_call_graph"
-  begin fun _ ->
-    print_string ("** Control-flow graph after collapsing, before paths computations: **\n");
-    print_graph collapsed_graph
-  end;
   ifDebug "show_final_call_graph"
   begin fun _ ->
     print_string "** Graph of paths of the initial control-flow graph: **\n";
