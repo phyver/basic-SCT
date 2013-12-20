@@ -1,4 +1,5 @@
 (* passes the SCT for B=2 and D=0 or B=1 and D=1 *)
+
 f1 x = g1 A[x]
 
 g1 A[A[x]] = f1 x

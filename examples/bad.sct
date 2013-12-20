@@ -1,4 +1,5 @@
-(* an example that wouldn't type check *)
+(* an example that wouldn't type check. The SCT test will raise an exception
+when it sees an incompatibility between a match "A-" and a tuple *)
 
 bad A[x,y] = bad (x,A[A[x]])
 
