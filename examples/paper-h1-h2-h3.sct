@@ -1,0 +1,8 @@
+(* example from page 18: it passes the test for D=0 and B>2 *)
+
+h1 A[A[A[x]]] = h2 x
+
+h2 x = h3 A[x]
+
+h3 x = h1 A[x]
+
