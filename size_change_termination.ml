@@ -791,8 +791,8 @@ let transitive_closure initial_graph d b =
             ) a'
           ) a
         end
-      ) g
-    ) ig;
+      ) ig
+    ) g;
     !result
   in
 
