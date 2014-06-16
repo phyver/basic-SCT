@@ -466,6 +466,7 @@ let rec compatible t1 t2 = match t1,t2 with
  * to be the case in the examples. (See assertion acc=[].)
  *)
 let _Record l =
+  (*
   let rec flatten_default l acc = match l with
       [] -> raise Exit
     | ("#default",Record[])::_ -> raise Exit
@@ -478,6 +479,7 @@ let _Record l =
     | ("#default",_)::_ -> raise Exit
     | r::l -> flatten_default l (r::acc)
   in
+  *)
   match l with
     | ["#default",arg] -> arg
     | ("#default",Record[])::_ -> Record l
@@ -855,6 +857,7 @@ let transitive_closure initial_graph d b =
   graph_of_paths
 
 
+(*
 (* computes the list of function names (nodes) that are accessible from f in the
  * given graph *)
 let accessible_from graph f =
@@ -874,6 +877,7 @@ let accessible_from graph f =
     List.iter dfs next
   in
   !seen
+*)
 
 (**********************************************************************
  * Putting everything together: the size-change termination principle *
