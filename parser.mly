@@ -4,6 +4,7 @@ open Tools
 
 %token NEWLINE EQUAL LPAR RPAR LBRAC RBRAC COMMA EOF
 %token <string> ID
+%token <string> DUMMY
 
 %start defs
 %type <Tools.clause list> defs
@@ -25,6 +26,7 @@ parameters:
   | parameter parameters    { $1::$2 }
 
 atomic_parameter:
+  | DUMMY                       { Var($1) }
   | ID                          { Var($1) }
   | ID LBRAC RBRAC              { Constr($1,Tuple([]))}
   | ID LBRAC parameter RBRAC    { Constr($1,$3)}
@@ -44,6 +46,7 @@ atomic_terms:
   | atomic_term atomic_terms    { $1::$2 }
 
 atomic_term:
+  | DUMMY                   { Var($1) }
   | ID                      { Var($1) }
   | ID LBRAC RBRAC          { Constr($1,Tuple([])) }
   | ID LBRAC term RBRAC     { Constr($1,$3) }

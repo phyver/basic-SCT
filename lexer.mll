@@ -4,6 +4,7 @@ open Parser
 let alpha = [ 'A'-'Z' 'a'-'z' ]
 let other = [ '0'-'9' '_']
 let id = alpha(alpha|other)*
+let dummy = ['_']
 
 rule token = parse
   | [' ' '\t']      { token lexbuf }
@@ -15,6 +16,7 @@ rule token = parse
   | ']'             { RBRAC }
   | ','             { COMMA }
   | id              { ID(Lexing.lexeme lexbuf) }
+  | dummy           { DUMMY(Lexing.lexeme lexbuf) }
   | eof             { EOF }
   | "(*"            { comments 0 lexbuf }
 and comments level = parse
