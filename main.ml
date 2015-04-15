@@ -57,7 +57,7 @@ let main () =
           exit 2
       ) clauses;
 
-      if SCT.size_change_termination_bounds !graph !SCT.depth_bound !SCT.size_bound
+      if SCT.size_change_termination !graph
       then
         (print_string "OK, all functions terminate\n" ;
         exit 0)

@@ -46,7 +46,6 @@ clean:
 	rm -f sct
 
 very_clean:
-	rm -f *.mli
 	rm -f *.cm[aoix] *.o
 	rm -f lexer.ml parser.ml parser.mli
 	rm -f sct
