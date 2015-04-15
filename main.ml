@@ -6,6 +6,7 @@ let _ =
   SCT.depth_bound:=2;
   SCT.setOption "show_all_compositions" false;
   SCT.setOption "initial_collapse_of_graph" false;
+  SCT.setOption "use_calling_context" true;
 
   SCT.setOption "show_initial_call_graph" false ;
   SCT.setOption "show_final_call_graph" false ;
@@ -45,7 +46,7 @@ let main () =
           *)
           graph := SCT.Call_Graph.add
                         (g,f)
-                        (SCT.add_call_set (List.sort compare call) (try SCT.Call_Graph.find (g,f) !graph
+                        (SCT.add_call_set (List.sort compare (fst call) , List.sort compare (snd call)) (try SCT.Call_Graph.find (g,f) !graph
                                                                     with Not_found -> SCT.Calls_Set.empty))
                         !graph ;
                   ) p
@@ -82,6 +83,7 @@ let _ =
     ("-B", Arg.Int (fun b -> SCT.size_bound:=b), "<n> set bound 'B' to n (n>0)");
     ("-D", Arg.Int (fun d -> SCT.depth_bound:=d), "<n> set bound 'D' (n>=0)");
     ("-v", Arg.Int (fun v -> set_verbosity v), "<n> shows various information (0<n<7)");
+    ("-no_calling_context", Arg.Unit (fun _ -> SCT.setOption "use_calling_context" false), "doesn't use calling contexts to detect more impossible cases");
     ("-no_subsumption", Arg.Unit (fun _ -> SCT.setOption "use_approximates" false), "doesn't use subsumption to simplify the graph of paths");
     ("-collapse_analysis", Arg.Unit (fun _ -> SCT.setOption "initial_collapse_of_graph" true), "collapse the static analysis before building graph of path");
     ("-original_SCT", Arg.Unit (fun _ -> SCT.size_bound:=1; SCT.depth_bound:=0; SCT.setOption "initial_collapse_of_graph" true), "makes the criterion behave like the original SCT");

@@ -46,12 +46,13 @@ let print_clause c = let f, c, t = c in
 
 (* transforms the patterns of the clause into an environment for the SCT: the
  * pattern Cons[x,xs] will give x:= pi_1 Cons- x0 and xs = pi_2 Cons- x0 *)
-let patterns2environment all : (string * SCT.term) list=
+let patterns2environment all : (string * SCT.term) list =
   (* c: current context
    * b: branch already computed
    * i: number of the function parameter *)
   let rec patterns2environment_aux i b c= match c with
     | Var(x) -> [(x, SCT.Epsilon(b, i))]
+    | Tuple([]) ->  [("_context", SCT.Epsilon(b, i))]  (* we need to keep information about constants for the contexte... *)
     | Tuple(l) -> List.concat (mapi (fun k t -> patterns2environment_aux i (SCT.Project (string_of_int k)::b) t) l)
     | Constr(ct, t) -> patterns2environment_aux i ((SCT.RemoveVariant ("#"^ct))::b) t
     | App(_,_) -> assert false
@@ -72,7 +73,7 @@ let infty arity =
  *   args is the list of arguments
  *   environment is the environment corresponding to the patterns of the clause
  *   arity is the arity of the calling function *)
-let process_args args environment arity: SCT.call =
+let process_args args environment arity(*: SCT.call*) =
   let rec process_args_aux (a:term) = match a with
     | Var(x) ->
         if List.mem_assoc x environment
@@ -81,7 +82,8 @@ let process_args args environment arity: SCT.call =
     | Tuple([]) -> infty arity
     | Tuple(l) ->  SCT.Record(mapi (fun i a -> (string_of_int i, process_args_aux a)) l)
     | Constr(c, a) -> SCT.Variant("#"^c, process_args_aux a)
-    | App(_,_) -> infty arity
+    (* | App(_,_) -> infty arity *)
+    | App(a,_) -> process_args_aux a
   in
   mapi (fun i a -> (i, process_args_aux a)) args
 
@@ -90,7 +92,7 @@ let process_args args environment arity: SCT.call =
  *   list_functions is the list of inductively defined functions in the definitions*)
 let process_clause c list_functions = match c with f, c, t ->
   let environment = patterns2environment c in
-  let rec process_clause_aux (args:term list) (t:term) : (string*SCT.call) list =
+  let rec process_clause_aux (args:term list) (t:term) : (string*SCT.substitution) list =
     match t with
     | Var(x) ->
         if List.mem_assoc x environment
@@ -102,6 +104,8 @@ let process_clause c list_functions = match c with f, c, t ->
     | Constr(_, t) -> process_clause_aux [] t
     | App(t1, t2) -> (process_clause_aux (t2::args) t1) @ (process_clause_aux [] t2)
   in
-  process_clause_aux [] t
+  let context = List.map (function _,SCT.Epsilon(ds,x) -> (ds,x) | _ -> assert false) environment in
+  let context = SCT.sort_uniq context in
+  List.map (function f,tau -> f,(tau,context)) (process_clause_aux [] t)
 
 

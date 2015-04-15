@@ -101,6 +101,16 @@ does terminate
  * 4/ The actual test is incremental: we try with d=0, 1, 2, 4, ...,
  * depth_bound. This seems to be efficient in practice.
  *
+ * 5/ The calls also contains a "calling context". This is a list of
+ * destructor branches that can be applied to arguments. This allows to keep
+ * the information that x starts with an A[] in the following code
+ *   val rec f x = match x with A[y] -> f B[x]
+ * The call will be represented by
+ *   x := B x   |   A- x
+ * The right part is the calling context...
+ *
+ * When composing two calls, we check that those destructors can indeed be
+ * applied. In particular, the previous call cannot be composed with itself.
  *)
 
 
@@ -111,6 +121,7 @@ let debugOptions = ref [
   "additional_sanity_checking" , true                   ;
   "use_approximates" , true                             ;
   "initial_collapse_of_graph", true                     ;
+  "use_calling_context", true                           ;
 
 (* verbosity of output messages *)
   "show_lambda" , false                                 ;
@@ -155,6 +166,16 @@ type z_infty = Number of int | Infty
 type destructor = Project of string | RemoveVariant of string
 
 (*
+ * The type for variables
+ *)
+type var = int
+
+(*
+ * branches have an approximation weight, a list of destructors and a variable
+ *)
+type branch = z_infty * destructor list * var
+
+(*
  * The actual type for term terms ($\mathcal T$ in the
  * paper).
  * Note: the first element of a list of destructors is the rightmost destructor.
@@ -162,8 +183,8 @@ type destructor = Project of string | RemoveVariant of string
 type term =
     Variant of string*term
   | Record of (string*term) list
-  | Epsilon of (destructor list)*int
-  | Sum of (z_infty*(destructor list)*int) list       (* Note: the list should be sorted... *)
+  | Epsilon of (destructor list)*var
+  | Sum of branch list       (* Note: the list should be sorted... *)
 
 (* The exception for impossible cases. *)
 exception Impossible_case
@@ -173,7 +194,9 @@ exception Impossible_case
  * could (should?) replace them by maps. At the moment, they are supposed to be
  * sorted and contain elements indexed by 0, 1, ..., n.
  *)
-type call = (int*term) list
+type substitution = (var*term) list
+type context = (destructor list * var) list
+type call = substitution * context
 
 (* Sets of substitutions *)
 module Calls_Set = Set.Make (struct type t=call let compare=compare end)
@@ -241,6 +264,13 @@ let print_substitution tau =
     end
   ) tau
 
+let print_context context =
+    print_string "      calling context:   {  ";
+    print_list "  ,  " (function ds,i -> print_list " " print_destr ds ; print_string " x_"; print_int i) context;
+    print_string "  }"
+
+let print_call (tau,context) = print_substitution tau ; print_context context ; print_newline()
+
 let print_graph g =
   let t = ref 0 in
   Call_Graph.iter (fun fg s ->
@@ -248,7 +278,7 @@ let print_graph g =
     print_string ("  Calls from "^f^" to "^g^":\n");
     Calls_Set.iter (fun tau ->
       t := !t+1;
-      print_substitution tau;
+      print_call tau;
       print_newline()
     ) s
   ) g;
@@ -290,15 +320,22 @@ let add_int w n = match w with
  * Sanity checking functions. *
  ******************************)
 
+(* checks if a list is sorted *)
+let rec sorted l = match l with
+    [] -> ()
+  | [_] -> ()
+  | a::((b::_) as l) when (compare a b)<0 -> sorted l
+  | a::b::_ -> assert false
+
 (* checks if a substitution is sorted *)
-let sorted_call tau =
+let sorted_call (tau,context) =
   let rec aux tau n =
     match tau with
         [] -> ()
       | (i,_)::tau when i=n -> aux tau (n+1)
       | _ -> assert false
   in
-  aux tau 0
+  aux tau 0 ; sorted context
 
 (* checks if the labels of a record are sorted *)
 let rec sorted_labels l = match l with
@@ -306,13 +343,6 @@ let rec sorted_labels l = match l with
   | [_] -> ()
   | (a,_)::(((b,_)::_) as l) when (compare a b)<0 -> sorted_labels l
   | (a,_)::(b,_)::_ -> print_string ("OUPS: "^a^" / "^b^"\n"); assert false
-
-(* checks if a list is sorted *)
-let rec sorted l = match l with
-    [] -> ()
-  | [_] -> ()
-  | a::((b::_) as l) when (compare a b)<0 -> sorted l
-  | a::b::_ -> assert false
 
 
 (***********************
@@ -507,7 +537,7 @@ let get_term i tau =
   with Not_found -> Sum []
 
 (* approximation order for substitutions *)
-let approximates_substitution tau sigma =
+let approximates_substitution (tau,context1) (sigma,context2) =
   let rec indices a b acc =
     match a,b with
         [],b | b,[] -> List.rev_append (List.rev_map fst b) acc
@@ -517,12 +547,14 @@ let approximates_substitution tau sigma =
   List.for_all (function i ->
     let v=get_term i sigma in
     let u=get_term i tau in
-    approximates u v) (indices tau sigma [])
+    approximates u v) (indices tau sigma []) &&
+    approximates (Sum (List.rev_map (function ds,i -> (Infty,ds,i)) context1))
+                 (Sum (List.rev_map (function ds,i -> (Infty,ds,i)) context2))
 
 (* compatibility for substitutions *)
-let compatible_substitution =
+let compatible_substitution (tau1,_) (tau2,_) =
   try
-    List.for_all2 (fun x y -> compatible (snd x) (snd y))
+    List.for_all2 (fun x y -> compatible (snd x) (snd y)) tau1 tau2
   with
     Invalid_argument _ -> assert false (* we only check compatibility for self loops. *)
 
@@ -666,15 +698,25 @@ let rec collapse3 d u =
  * traversing the term term three times, but it's probably not worth it.)
  *)
 let collapse d b u = collapse1 b (collapse2 d (collapse3 d u))
-let collapse_call d b tau = List.map (function i,u -> i,collapse d b u) tau
+let collapse_call d b (tau,context) = List.map (function i,u -> i,collapse d b u) tau , context (* FIXME: should we collapse the calling context? *)
 
 
 (*
  * Composition of substitutions, with collapse. (I don't need the uncollapsed
  * composition in the code.
  *)
-let compose d b tau1 tau2 =
-  collapse_call d b (List.map (function i,u -> i,(substitute u tau1)) tau2)
+let compose d b (tau1,context1) (tau2,context2) =
+    (* we check if the calling context of tau2 is compatible with tau1... *)
+    List.iter (function ds,i ->
+        let t = get_term i tau1 in
+        try
+            get_subtree (List.rev ds) t; ()
+        with Impossible_case -> 
+            (* print_term t; print_string " is incompatible with context "; print_list " " print_destr ds; print_newline (); *)
+            raise Impossible_case
+    ) context2;
+    (* FIXME: should we try to compose the calling contexts? *)
+    collapse_call d b ((List.map (function i,u -> i,(substitute u tau1)) tau2),context1)
 
 
 (*************************
@@ -682,7 +724,7 @@ let compose d b tau1 tau2 =
  *************************)
 
 (* checks if a coherent loop has a decreasing subterm *)
-let is_decreasing tau =
+let is_decreasing (tau,_) =
 
   let isOK ds t i =
     if approximates (Sum [Number(-1), ds, i]) t
@@ -773,15 +815,19 @@ let transitive_closure initial_graph d b =
                               with Not_found -> Calls_Set.empty
               in
               try
-                let sigma : call = compose d b tau tau' in
                 ifDebug "show_all_compositions"
                 begin fun _ ->
                   print_string "** Composing: **\n";
-                  print_substitution tau;
+                  print_call tau;
                   print_string "    with\n";
-                  print_substitution tau';
-                  print_string "    with B="; print_int b; print_string " and D="; print_int d; print_string " to give\n";
-                  print_substitution sigma;
+                  print_call tau';
+                  print_string "    with B="; print_int b; print_string " and D="; print_int d; print_string "\n** to give\n";
+                end;
+                let sigma : call = compose d b tau tau' in
+                ifDebug "show_all_compositions"
+                begin fun _ ->
+                  print_call sigma;
+                  print_newline();
                   print_newline()
                 end;
                 if (new_call_set sigma all_calls)
@@ -789,7 +835,13 @@ let transitive_closure initial_graph d b =
                   new_arcs := true;
                   result := Call_Graph.add (f,g') (add_call_set sigma all_calls) !result;
                 end
-              with Impossible_case -> ()
+              with Impossible_case ->
+                ifDebug "show_all_compositions"
+                begin fun _ ->
+                  print_string "    IMPOSSIBLE CASE...";
+                  print_newline();
+                  print_newline()
+                end;
             ) a'
           ) a
         end
@@ -882,10 +934,21 @@ let accessible_from graph f =
 (**********************************************************************
  * Putting everything together: the size-change termination principle *
  **********************************************************************)
+let remove_contexts graph =
+  let newgraph = ref Call_Graph.empty in
+    Call_Graph.iter (fun fg a ->
+        let f,g = fg in
+          Calls_Set.iter (function tau,_ ->
+            let s = try Call_Graph.find fg !newgraph
+                    with Not_found -> Calls_Set.empty in
+            newgraph := Call_Graph.add fg (add_call_set (tau,[]) s) !newgraph
+          ) a
+    ) graph;
+  !newgraph
+
 
 let size_change_termination_bounds graph d b =
   assert (d>=0 && b>0) ;
-
   let tc_graph = transitive_closure graph d b in
     Call_Graph.for_all
       (fun fg s ->
@@ -899,12 +962,12 @@ let size_change_termination_bounds graph d b =
                 ifDebug "show_coherents"
                 begin fun _ ->
                   print_string ("** Found coherent loop from \"" ^ f ^ "\" to itself: **\n");
-                  print_substitution sigma
+                  print_call sigma
                 end;
                 is_decreasing sigma ||
                 (ifDebug "show_nondecreasing_coherents" begin fun _ ->
                   print_string ("** Found non-decreasing coherent loop from \"" ^ f ^ "\" to itself: **\n");
-                  print_substitution sigma;
+                  print_call sigma;
                   print_newline()
                 end;
                 false)
@@ -922,6 +985,11 @@ let size_bound = ref 1
 let depth_bound = ref 2
 
 let size_change_termination graph =
+
+  let graph = if debugOption "use_calling_context"
+              then graph
+              else remove_contexts graph in
+
   let rec ds n acc =
     if (!depth_bound <= n)
     then List.rev (!depth_bound::acc)
