@@ -265,7 +265,7 @@ let print_substitution tau =
   ) tau
 
 let print_context context =
-    print_string "      calling context:   {  ";
+    if debugOption "calling_context" then print_string "      calling context:   {  ";
     print_list "  ,  " (function ds,i -> print_list " " print_destr ds ; print_string " x_"; print_int i) context;
     print_string "  }"
 
