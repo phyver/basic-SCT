@@ -710,7 +710,7 @@ let compose d b (tau1,context1) (tau2,context2) =
     List.iter (function ds,i ->
         let t = get_term i tau1 in
         try
-            get_subtree (List.rev ds) t; ()
+            ignore (get_subtree (List.rev ds) t); ()
         with Impossible_case -> 
             (* print_term t; print_string " is incompatible with context "; print_list " " print_destr ds; print_newline (); *)
             raise Impossible_case
@@ -937,13 +937,12 @@ let accessible_from graph f =
 let remove_contexts graph =
   let newgraph = ref Call_Graph.empty in
     Call_Graph.iter (fun fg a ->
-        let f,g = fg in
-          Calls_Set.iter (function tau,_ ->
+        Calls_Set.iter (function tau,_ ->
             let s = try Call_Graph.find fg !newgraph
-                    with Not_found -> Calls_Set.empty in
+              with Not_found -> Calls_Set.empty in
             newgraph := Call_Graph.add fg (add_call_set (tau,[]) s) !newgraph
-          ) a
-    ) graph;
+            ) a
+        ) graph;
   !newgraph
 
 
