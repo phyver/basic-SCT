@@ -1,54 +1,26 @@
-OCAMLYACC=ocamlyacc
-OCAMLLEX=ocamllex
-OCAMLC=ocamlc
-OCAMLOPT=ocamlopt
-OCAMLDEP=ocamldep
+INSTALLDIR=$(HOME)/.local/bin
+OCAMLBUILD=ocamlbuild
 
-INCLUDES=
+all: native
 
-OCAMLFLAGS=$(INCLUDES)
-OCAMLDEPFLAGS=$(INCLUDES)
+tags:
+	ctags *.ml
 
-BYTEFILES=size_change_termination.cmo tools.cmo parser.cmo lexer.cmo
-OPTFILES=size_change_termination.cmx tools.cmx parser.cmx lexer.cmx
+native:
+	$(OCAMLBUILD) main.native
+	@ln -sf ./main.native ./sct
 
-# Common rules
-.SUFFIXES: .ml .mli .cmo .cmi .cmx
-
-.ml.cmo:
-	$(OCAMLC) $(OCAMLFLAGS) -c $<
-
-.mli.cmi:
-	$(OCAMLC) $(OCAMLFLAGS) -c $<
-
-.ml.cmx:
-		$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
-
-all: opt
-
-byte: $(BYTEFILES)
-	$(OCAMLC) $(INCLUDES) $(BYTEFILES) -o sct main.ml
-
-opt: $(OPTFILES)
-	$(OCAMLOPT) $(INCLUDES) $(OPTFILES) -o sct main.ml
-
-depend: parser.ml lexer.ml
-	$(OCAMLDEP) $(OCAMLDEPFLAGS) *.ml *.mli > .depend
-
-parser.ml:
-	$(OCAMLYACC) $(OCAMLYACCFLAGS) parser.mly
-
-lexer.ml:
-	$(OCAMLLEX) $(OCAMLLEXFLAGS) lexer.mll
+byte:
+	$(OCAMLBUILD) main.byte
+	@ln -sf ./main.byte ./sct
 
 clean:
-	rm -f *.cm[aoix] *.o
+	$(OCAMLBUILD) -clean
+	rm -rf _build
+	rm -f main.native main.byte
 	rm -f sct
-
-very_clean:
-	rm -f *.cm[aoix] *.o
-	rm -f lexer.ml parser.ml parser.mli
-	rm -f sct
+	rm -f tags
+	rm -f gmon.out a.out
 
 
-include .depend
+

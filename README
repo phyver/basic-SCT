@@ -9,22 +9,7 @@ Compiling the program
 =====================
 
 To compile:
-  $ make clean
-and then
-  $ make opt
-or
-  $ make byte
-
-
-To regenerate all the ml files with ocamllex / ocamlyacc:
-  $ make very_clean
-  $ touch .depend
-  $ make depend
-and then
-  $ make opt
-or
-  $ make byte
-
+  $ make
 
 Running the program
 ===================
