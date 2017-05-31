@@ -41,9 +41,9 @@ parameter_tuple:
   | COMMA atomic_parameter                  { [$2] }
   | COMMA atomic_parameter parameter_tuple  { $2::$3 }
 
-atomic_terms:
-                                { [] }
-  | atomic_term atomic_terms    { $1::$2 }
+//atomic_terms:
+//                                { [] }
+//  | atomic_term atomic_terms    { $1::$2 }
 
 atomic_term:
   | DUMMY                   { Var($1) }
